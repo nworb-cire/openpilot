@@ -192,6 +192,14 @@ FINGERPRINTS = {
   }],
 }
 
+FW_VERSIONS = {
+  CAR.BOLT_EUV: {
+    (Ecu.fwdCamera, 0x64b - 8, None): [],
+    (Ecu.engine, 0x7e8 - 8, None): [],
+    (Ecu.eps, 0x642 - 8, None): [],
+  }
+}
+
 DBC: Dict[str, Dict[str, str]] = defaultdict(lambda: dbc_dict('gm_global_a_powertrain_generated', 'gm_global_a_object', chassis_dbc='gm_global_a_chassis'))
 
 EV_CAR = {CAR.VOLT, CAR.BOLT_EUV}
