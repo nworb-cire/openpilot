@@ -196,6 +196,10 @@ FW_VERSIONS = {
   CAR.BOLT_EUV: {
     (Ecu.fwdCamera, 0x64b - 8, None): [],
     (Ecu.engine, 0x7e8 - 8, None): [],
+    (Ecu.transmission, 0x7e9 - 8, None): [],
+    (Ecu.transmission, 0x7ee - 8, None): [],
+    (Ecu.engine, 0x7Eb - 8, None): [],
+    (Ecu.engine, 0x7EC - 8, None): [],
     (Ecu.eps, 0x642 - 8, None): [],
   }
 }
