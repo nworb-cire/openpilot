@@ -15,7 +15,8 @@ class CarState(CarStateBase):
     super().__init__(CP)
     can_define = CANDefine(DBC[CP.carFingerprint]["pt"])
     self.shifter_values = can_define.dv["ECMPRDNL2"]["PRNDL2"]
-    self.lka_steering_cmd_counter = 0
+    self.loopback_lka_steering_cmd_updated = False
+    self.camera_lka_steering_cmd_counter = 0
     self.buttons_counter = 0
 
   def update(self, pt_cp, cam_cp, loopback_cp):
@@ -24,6 +25,11 @@ class CarState(CarStateBase):
     self.prev_cruise_buttons = self.cruise_buttons
     self.cruise_buttons = pt_cp.vl["ASCMSteeringButton"]["ACCButtons"]
     self.buttons_counter = pt_cp.vl["ASCMSteeringButton"]["RollingCounter"]
+
+    # Variables used for avoiding LKAS faults
+    self.loopback_lka_steering_cmd_updated = len(loopback_cp.vl_all["ASCMLKASteeringCmd"]) > 0
+    if self.CP.networkLocation == NetworkLocation.fwdCamera:
+      self.camera_lka_steering_cmd_counter = cam_cp.vl["ASCMLKASteeringCmd"]["RollingCounter"]
 
     ret.wheelSpeeds = self.get_wheel_speeds(
       pt_cp.vl["EBCMWheelSpdFront"]["FLWheelSpd"],
@@ -63,7 +69,6 @@ class CarState(CarStateBase):
     ret.steeringTorque = pt_cp.vl["PSCMStatus"]["LKADriverAppldTrq"]
     ret.steeringTorqueEps = pt_cp.vl["PSCMStatus"]["LKATorqueDelivered"]
     ret.steeringPressed = abs(ret.steeringTorque) > STEER_THRESHOLD
-    self.lka_steering_cmd_counter = loopback_cp.vl["ASCMLKASteeringCmd"]["RollingCounter"]
 
     # 0 inactive, 1 active, 2 temporarily limited, 3 failed
     self.lkas_status = pt_cp.vl["PSCMStatus"]["LKATorqueDeliveredStatus"]
@@ -100,11 +105,13 @@ class CarState(CarStateBase):
 
 
     if self.CP.networkLocation == NetworkLocation.fwdCamera:
+      ret.stockAeb = cam_cp.vl["AEBCmd"]["AEBCmdActive"] != 0
+      
       if self.CP.carFingerprint in CC_ONLY_CAR:
         ret.cruiseState.speed = (pt_cp.vl["ECMCruiseControl"]["CruiseSetSpeed"]) * CV.KPH_TO_MS
       else:
         ret.cruiseState.speed = (cam_cp.vl["ASCMActiveCruiseControlStatus"]["ACCSpeedSetpoint"] / 16) * CV.KPH_TO_MS
-
+        ret.stockFcw = cam_cp.vl["ASCMActiveCruiseControlStatus"]["FCWAlert"] != 0
 
     return ret
 
@@ -112,9 +119,25 @@ class CarState(CarStateBase):
   def get_cam_can_parser(CP):
     signals = []
     checks = []
+    if CP.networkLocation == NetworkLocation.fwdCamera:
+      signals += [
+        ("AEBCmdActive", "AEBCmd"),
+        ("RollingCounter", "ASCMLKASteeringCmd"),
+        #("FCWAlert", "ASCMActiveCruiseControlStatus"),
+        #("ACCSpeedSetpoint", "ASCMActiveCruiseControlStatus"),
+      ]
+      checks += [
+        ("AEBCmd", 10),
+        ("ASCMLKASteeringCmd", 10),
+        #("ASCMActiveCruiseControlStatus", 25),
+      ]
+
     if CP.networkLocation == NetworkLocation.fwdCamera and CP.carFingerprint not in CC_ONLY_CAR:
+      signals.append(("FCWAlert", "ASCMActiveCruiseControlStatus"))
       signals.append(("ACCSpeedSetpoint", "ASCMActiveCruiseControlStatus"))
       checks.append(("ASCMActiveCruiseControlStatus", 25))
+
+
     return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.CAMERA)
 
   @staticmethod

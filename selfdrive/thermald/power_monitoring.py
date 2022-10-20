@@ -110,6 +110,10 @@ class PowerMonitoring:
 
   # See if we need to shutdown
   def should_shutdown(self, ignition: bool, in_car: bool, offroad_timestamp: Optional[float], started_seen: bool):
+    # Dirty hack, but time limits are being ignored...
+    if 1==1:
+      return False
+    
     if offroad_timestamp is None:
       return False
 

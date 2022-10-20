@@ -72,10 +72,9 @@ class LatControlTorque(LatControl):
       actual_lateral_accel = actual_curvature * CS.vEgo ** 2
       lateral_accel_deadzone = curvature_deadzone * CS.vEgo ** 2
 
-
-      low_speed_factor = interp(CS.vEgo, [0, 15], [500, 0])
-      setpoint = desired_lateral_accel + low_speed_factor * desired_curvature
-      measurement = actual_lateral_accel + low_speed_factor * actual_curvature
+      LOW_SPEED_FACTOR = interp(CS.vEgo, [0, 15], [500, 0])
+      setpoint = desired_lateral_accel + LOW_SPEED_FACTOR * desired_curvature
+      measurement = actual_lateral_accel + LOW_SPEED_FACTOR * actual_curvature
       error = apply_deadzone(setpoint - measurement, lateral_accel_deadzone)
       pid_log.error = error
 
