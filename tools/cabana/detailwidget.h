@@ -1,52 +1,52 @@
 #pragma once
 
-#include <QDialog>
-#include <QLabel>
-#include <QPushButton>
+#include <QScrollArea>
 #include <QTableWidget>
-#include <QVBoxLayout>
-#include <QWidget>
 
 #include "opendbc/can/common.h"
 #include "opendbc/can/common_dbc.h"
-#include "tools/cabana/parser.h"
+#include "tools/cabana/canmessages.h"
+#include "tools/cabana/dbcmanager.h"
+#include "tools/cabana/historylog.h"
 #include "tools/cabana/signaledit.h"
 
-class HistoryLog : public QWidget {
-  Q_OBJECT
-
+class BinarySelectionModel : public QItemSelectionModel {
 public:
-  HistoryLog(QWidget *parent);
-  void clear();
-  void updateState();
-
-private:
-  QLabel *labels[LOG_SIZE] = {};
+  BinarySelectionModel(QAbstractItemModel *model = nullptr) : QItemSelectionModel(model) {}
+  void select(const QItemSelection &selection, QItemSelectionModel::SelectionFlags command) override;
 };
 
-class BinaryView : public QWidget {
+class BinaryView : public QTableWidget {
   Q_OBJECT
-
 public:
-  BinaryView(QWidget *parent);
-  void setMsg(const CanData *can_data);
-  void setData(const QByteArray &binary);
+  BinaryView(QWidget *parent = nullptr);
+  void mouseReleaseEvent(QMouseEvent *event) override;
+  void setMessage(const QString &message_id);
+  void updateState();
+signals:
+  void cellsSelected(int start_bit, int size);
 
-  QTableWidget *table;
+private:
+  QString msg_id;
 };
 
 class EditMessageDialog : public QDialog {
   Q_OBJECT
 
 public:
-  EditMessageDialog(const QString &id, QWidget *parent);
-
-protected:
-  void save();
+  EditMessageDialog(const QString &msg_id, const QString &title, int size, QWidget *parent);
 
   QLineEdit *name_edit;
   QSpinBox *size_spin;
-  QString id;
+};
+
+class ScrollArea : public QScrollArea {
+  Q_OBJECT
+
+public:
+  ScrollArea(QWidget *parent) : QScrollArea(parent) {}
+  bool eventFilter(QObject *obj, QEvent *ev) override;
+  void setWidget(QWidget *w);
 };
 
 class DetailWidget : public QWidget {
@@ -54,17 +54,26 @@ class DetailWidget : public QWidget {
 
 public:
   DetailWidget(QWidget *parent);
-  void setMsg(const CanData *c);
+  void setMessage(const QString &message_id);
+  void dbcMsgChanged();
+
+signals:
+  void showChart(const QString &msg_id, const Signal *sig);
+  void removeChart(const Signal *sig);
 
 private:
-  void updateState();
-  void addSignal();
+  void addSignal(int start_bit, int size);
+  void saveSignal();
+  void removeSignal();
   void editMsg();
+  void showForm();
+  void updateState();
 
-  const CanData *can_data = nullptr;
+  QString msg_id;
   QLabel *name_label, *time_label;
-  QPushButton *edit_btn, *add_sig_btn;
-  QVBoxLayout *signal_edit_layout;
+  QPushButton *edit_btn;
+  QWidget *signals_container;
   HistoryLog *history_log;
   BinaryView *binary_view;
+  ScrollArea *scroll;
 };
