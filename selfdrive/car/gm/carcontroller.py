@@ -177,6 +177,12 @@ class CarController:
           at_full_stop = CC.longActive and CS.out.standstill
           near_stop = CC.longActive and (CS.out.vEgo < self.params.NEAR_STOP_BRAKE_PHASE)
           # GasRegenCmdActive needs to be 1 to avoid cruise faults. It describes the ACC state, not actuation
+          if at_full_stop \
+              and self.apply_gas > self.params.ZERO_GAS \
+              and (self.frame - self.last_button_frame) * DT_CTRL > 0.04:
+            self.last_button_frame = self.frame
+            cloudlog.error('Spamming Resume+')
+            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, CS.buttons_counter, CruiseButtons.RES_ACCEL))
           can_sends.append(gmcan.create_gas_regen_command(self.packer_pt, CanBus.POWERTRAIN, self.apply_gas, idx, CC.enabled, at_full_stop))
           can_sends.append(gmcan.create_friction_brake_command(self.packer_ch, CanBus.CHASSIS, self.apply_brake, idx, near_stop, at_full_stop))
 
