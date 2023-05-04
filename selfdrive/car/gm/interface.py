@@ -5,6 +5,7 @@ from common.numpy_fast import interp, clip, sign
 from common.realtime import sec_since_boot
 from common.op_params import opParams
 from common.params import Params, put_nonblocking
+from panda import Panda
 from selfdrive.swaglog import cloudlog
 from selfdrive.config import Conversions as CV
 from selfdrive.car.gm.values import CAR, CruiseButtons, \
@@ -372,6 +373,10 @@ class CarInterface(CarInterfaceBase):
       ret.longitudinalTuning.kdBP = [5., 25.]
       ret.longitudinalTuning.kdV = [0.004, 0.0]
       ret.stoppingDecelRate = 0.2 # brake_travel/s while trying to stop
+
+      # Disable harness relay check on certain flashed Volts
+      if (Params().get_bool("RelayMalfunctionBypass")):
+        ret.safetyParam |= Panda.FLAG_GM_RELAY_BYPASS
 
     elif candidate == CAR.MALIBU:
       # supports stop and go, but initial engage must be above 18mph (which include conservatism)
