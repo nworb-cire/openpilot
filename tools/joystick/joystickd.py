@@ -2,6 +2,8 @@
 import os
 import argparse
 import threading
+from dataclasses import dataclass
+
 from inputs import get_gamepad
 
 import cereal.messaging as messaging
@@ -37,27 +39,33 @@ class Keyboard:
     return True
 
 
+@dataclass
+class JoystickConfig:
+  accel_axis: str
+  steer_axis: str
+  cancel_button: str
+
+
+configs = {
+  'joystick': JoystickConfig(accel_axis='ABS_Y', steer_axis='ABS_RZ', cancel_button='BTN_TRIGGER'),
+  'gamepad': JoystickConfig(accel_axis='ABS_Y', steer_axis='ABS_RX', cancel_button='BTN_NORTH'),
+  'switch': JoystickConfig(accel_axis='ABS_Y', steer_axis='ABS_X', cancel_button='BTN_SOUTH'),
+}
+
 class Joystick:
-  def __init__(self, gamepad=False):
+  def __init__(self, config: JoystickConfig):
     # TODO: find a way to get this from API, perhaps "inputs" doesn't support it
-    if gamepad:
-      self.cancel_button = 'BTN_NORTH'  # (BTN_NORTH=X, ABS_RZ=Right Trigger)
-      accel_axis = 'ABS_Y'
-      steer_axis = 'ABS_RX'
-    else:
-      self.cancel_button = 'BTN_TRIGGER'
-      accel_axis = 'ABS_Y'
-      steer_axis = 'ABS_RZ'
-    self.min_axis_value = {accel_axis: 0., steer_axis: 0.}
-    self.max_axis_value = {accel_axis: 255., steer_axis: 255.}
-    self.axes_values = {accel_axis: 0., steer_axis: 0.}
-    self.axes_order = [accel_axis, steer_axis]
+    self.config = config
+    self.min_axis_value = {config.accel_axis: 0., config.steer_axis: 0.}
+    self.max_axis_value = {config.accel_axis: 255., config.steer_axis: 255.}
+    self.axes_values = {config.accel_axis: 0., config.steer_axis: 0.}
+    self.axes_order = [config.accel_axis, config.steer_axis]
     self.cancel = False
 
   def update(self):
     joystick_event = get_gamepad()[0]
     event = (joystick_event.code, joystick_event.state)
-    if event[0] == self.cancel_button:
+    if event[0] == self.config.cancel_button:
       if event[1] == 1:
         self.cancel = True
       elif event[1] == 0:   # state 0 is falling edge
@@ -98,7 +106,8 @@ if __name__ == '__main__':
                                                'openpilot must be offroad before starting joysticked.',
                                    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   parser.add_argument('--keyboard', action='store_true', help='Use your keyboard instead of a joystick')
-  parser.add_argument('--gamepad', action='store_true', help='Use gamepad configuration instead of joystick')
+  parser.add_argument('--gamepad', type=str, choices=['joystick', 'gamepad', 'switch'], default='joystick',
+                      help='Type of gamepad to use. Default is joystick.')
   args = parser.parse_args()
 
   if not Params().get_bool("IsOffroad") and "ZMQ" not in os.environ and "WEB" not in os.environ:
@@ -115,5 +124,5 @@ if __name__ == '__main__':
   else:
     print('Using joystick, make sure to run cereal/messaging/bridge on your device if running over the network!')
 
-  joystick = Keyboard() if args.keyboard else Joystick(args.gamepad)
+  joystick = Keyboard() if args.keyboard else Joystick(configs[args.gamepad])
   joystick_thread(joystick)
