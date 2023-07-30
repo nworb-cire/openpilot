@@ -329,6 +329,72 @@ class RouteEngine:
     return self.reroute_counter > REROUTE_COUNTER_MIN
     # TODO: Check for going wrong way in segment
 
+  def get_new_destination_from_mapbox_id(self, mapbox_id: str):
+    url = self.mapbox_host + '/search/searchbox/v1/retrieve/' + mapbox_id
+    params = {
+      'access_token': self.mapbox_token,
+    }
+    try:
+      resp = requests.get(url, params=params, timeout=10)
+      if resp.status_code != 200:
+        cloudlog.event("API request failed", status_code=resp.status_code, text=resp.text, error=True)
+      resp.raise_for_status()
+
+      r = resp.json()
+      if len(r['features']):
+        feat = r['features'][0]['properties']
+        if 'routable_points' in feat['coordinates'] and len(feat['coordinates']['routable_points']) > 0:
+          latitude = feat['coordinates']['routable_points'][0]['latitude']
+          longitude = feat['coordinates']['routable_points'][0]['longitude']
+        else:
+          latitude = feat['coordinates']['latitude']
+          longitude = feat['coordinates']['longitude']
+        ret = {
+          'place_name': feat['name'],
+          'place_details': feat['full_address'],
+          'latitude': latitude,
+          'longitude': longitude,
+        }
+        return ret
+      else:
+        cloudlog.warning("Got empty search response")
+        return
+    except requests.exceptions.RequestException:
+      cloudlog.exception("failed to get search")
+      return
+
+  def get_new_destination_from_text(self, dest: str):
+    # TODO: use saved locations for home and work
+    url = self.mapbox_host + '/search/searchbox/v1/suggest'
+    params = {
+      'q': dest,
+      'access_token': self.mapbox_token,
+      'proximity': str(self.last_position.longitude) + ',' + str(self.last_position.latitude),
+    }
+    try:
+      resp = requests.get(url, params=params, timeout=10)
+      if resp.status_code != 200:
+        cloudlog.event("API request failed", status_code=resp.status_code, text=resp.text, error=True)
+      resp.raise_for_status()
+
+      r = resp.json()
+      if len(r['suggestions']):
+        mapbox_id = r['suggestions'][0]['mapbox_id']
+        return self.get_new_destination_from_mapbox_id(mapbox_id)
+      else:
+        cloudlog.warning("Got empty search response")
+        return
+    except requests.exceptions.RequestException:
+      cloudlog.exception("failed to get search")
+      return
+
+  def set_new_destination(self, dest: str):
+    new_destination = self.get_new_destination_from_text(dest)
+    if new_destination is None:
+      return
+
+    self.params.put("NavDestination", json.dumps(new_destination))
+
 
 def main(sm=None, pm=None):
   if sm is None:
