@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <sstream>
+#include <string>
 
 #include <QApplication>
 #include <QLabel>
@@ -14,7 +15,8 @@
 #include "system/hardware/hw.h"
 #include "selfdrive/ui/qt/api.h"
 #include "selfdrive/ui/qt/qt_window.h"
-#include "selfdrive/ui/qt/offroad/networking.h"
+#include "selfdrive/ui/qt/network/networking.h"
+#include "selfdrive/ui/qt/util.h"
 #include "selfdrive/ui/qt/widgets/input.h"
 
 const std::string USER_AGENT = "AGNOSSetup-";
@@ -34,7 +36,7 @@ bool is_elf(char *fname) {
 void Setup::download(QString url) {
   CURL *curl = curl_easy_init();
   if (!curl) {
-    emit finished(false);
+    emit finished(url, tr("Something went wrong. Reboot the device."));
     return;
   }
 
@@ -53,15 +55,24 @@ void Setup::download(QString url) {
   curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
   curl_easy_setopt(curl, CURLOPT_USERAGENT, (USER_AGENT + version).c_str());
   curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
+  curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30L);
 
   int ret = curl_easy_perform(curl);
   long res_status = 0;
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_status);
-  if (ret == CURLE_OK && res_status == 200 && is_elf(tmpfile)) {
-    rename(tmpfile, "/tmp/installer");
-    emit finished(true);
+
+  if (ret != CURLE_OK || res_status != 200) {
+    emit finished(url, tr("Ensure the entered URL is valid, and the device’s internet connection is good."));
+  } else if (!is_elf(tmpfile)) {
+    emit finished(url, tr("No custom software found at this URL."));
   } else {
-    emit finished(false);
+    rename(tmpfile, "/tmp/installer");
+
+    FILE *fp_url = fopen("/tmp/installer_url", "w");
+    fprintf(fp_url, "%s", url.toStdString().c_str());
+    fclose(fp_url);
+
+    emit finished(url);
   }
 
   curl_slist_free_all(list);
@@ -234,10 +245,10 @@ QWidget * Setup::downloading() {
   return widget;
 }
 
-QWidget * Setup::download_failed() {
+QWidget * Setup::download_failed(QLabel *url, QLabel *body) {
   QWidget *widget = new QWidget();
   QVBoxLayout *main_layout = new QVBoxLayout(widget);
-  main_layout->setContentsMargins(55, 225, 55, 55);
+  main_layout->setContentsMargins(55, 185, 55, 55);
   main_layout->setSpacing(0);
 
   QLabel *title = new QLabel(tr("Download Failed"));
@@ -246,7 +257,13 @@ QWidget * Setup::download_failed() {
 
   main_layout->addSpacing(67);
 
-  QLabel *body = new QLabel(tr("Ensure the entered URL is valid, and the device’s internet connection is good."));
+  url->setWordWrap(true);
+  url->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+  url->setStyleSheet("font-family: \"JetBrains Mono\"; font-size: 64px; font-weight: 400; margin-right: 100px;");
+  main_layout->addWidget(url);
+
+  main_layout->addSpacing(48);
+
   body->setWordWrap(true);
   body->setAlignment(Qt::AlignTop | Qt::AlignLeft);
   body->setStyleSheet("font-size: 80px; font-weight: 300; margin-right: 100px;");
@@ -271,7 +288,7 @@ QWidget * Setup::download_failed() {
   restart->setProperty("primary", true);
   blayout->addWidget(restart);
   QObject::connect(restart, &QPushButton::clicked, this, [=]() {
-    setCurrentIndex(2);
+    setCurrentIndex(1);
   });
 
   widget->setStyleSheet(R"(
@@ -291,6 +308,10 @@ void Setup::nextPage() {
 }
 
 Setup::Setup(QWidget *parent) : QStackedWidget(parent) {
+  if (std::getenv("MULTILANG")) {
+    selectLanguage();
+  }
+
   std::stringstream buffer;
   buffer << std::ifstream("/sys/class/hwmon/hwmon1/in1_input").rdbuf();
   float voltage = (float)std::atoi(buffer.str().c_str()) / 1000.;
@@ -304,15 +325,19 @@ Setup::Setup(QWidget *parent) : QStackedWidget(parent) {
   downloading_widget = downloading();
   addWidget(downloading_widget);
 
-  failed_widget = download_failed();
+  QLabel *url_label = new QLabel();
+  QLabel *body_label = new QLabel();
+  failed_widget = download_failed(url_label, body_label);
   addWidget(failed_widget);
 
-  QObject::connect(this, &Setup::finished, [=](bool success) {
-    // hide setup on success
-    qDebug() << "finished" << success;
-    if (success) {
+  QObject::connect(this, &Setup::finished, [=](const QString &url, const QString &error) {
+    qDebug() << "finished" << url << error;
+    if (error.isEmpty()) {
+      // hide setup on success
       QTimer::singleShot(3000, this, &QWidget::hide);
     } else {
+      url_label->setText(url);
+      body_label->setText(error);
       setCurrentWidget(failed_widget);
     }
   });
@@ -347,6 +372,18 @@ Setup::Setup(QWidget *parent) : QStackedWidget(parent) {
       background-color: #3049F4;
     }
   )");
+}
+
+void Setup::selectLanguage() {
+  QMap<QString, QString> langs = getSupportedLanguages();
+  QString selection = MultiOptionDialog::getSelection(tr("Select a language"), langs.keys(), "", this);
+  if (!selection.isEmpty()) {
+    QString selectedLang = langs[selection];
+    Params().put("LanguageSetting", selectedLang.toStdString());
+    if (translator.load(":/" + selectedLang)) {
+      qApp->installTranslator(&translator);
+    }
+  }
 }
 
 int main(int argc, char *argv[]) {
