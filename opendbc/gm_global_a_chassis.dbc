@@ -37,7 +37,7 @@ BU_: K182_PACM K43_PSCM K17_EBCM NEO K124_ASCM
 
 
 BO_ A821 APASteerStatus: 4 K43_PSCM
- SG_ Steer_Valid : 0|1@0+ (1,0) [0|1] "" K182_PACM
+ SG_ Request_Valid : 0|1@0+ (1,0) [0|1] "" K182_PACM
  SG_ Steer_Active : 1|1@0+ (1,0) [0|1] "" K182_PACM
 
 BO_ PSCMSteeringAngle: 8 K43_PSCM
