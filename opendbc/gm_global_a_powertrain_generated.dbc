@@ -119,6 +119,9 @@ BO_ 309 ECMPRDNL: 8 K20_ECM
  SG_ PRNDL : 2|3@0+ (1,0) [0|0] ""  NEO
  SG_ ESPButton : 4|1@0+ (1,0) [0|1] "" XXX
 
+BO_ 313 STEER_RELATED: 7 XXX
+ SG_ PACMParkAssistCmdAvail : 8|1@0+ (1,0) [0|1] "" NEO
+
 BO_ 320 BCMTurnSignals: 3 K9_BCM
  SG_ TurnSignals : 19|2@0+ (1,0) [0|0] ""  NEO
  SG_ Intellibeam : 13|1@0+ (1,0) [0|1] "" XXX
@@ -245,9 +248,6 @@ BO_ 800 AEBCmd: 6 K124_ASCM
 BO_ 810 TCICOnStarGPSPosition: 8 K73_TCIC
  SG_ GPSLongitude : 39|32@0+ (1,-2147483648) [0|0] "milliarcsecond"  NEO
  SG_ GPSLatitude : 7|32@0+ (1,0) [0|0] "milliarcsecond"  NEO
-
-BO_ 823 STEER_RELATED: 7 XXX
- SG_ PACMParkAssistCmdAvail : 8|1@0+ (1,0) [0|1] "" NEO
 
 BO_ 840 EBCMWheelSpdFront: 5 K17_EBCM
  SG_ FLWheelSpd : 7|16@0+ (0.0311,0) [0|255] "km/h"  NEO
