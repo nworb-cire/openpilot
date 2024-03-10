@@ -44,7 +44,7 @@ BO_ A821 APASteerStatus: 4 K43_PSCM
 BO_ 823 PACMParkAssitCmd: 7 NEO
  SG_ RollingCounter : 35|2@0+ (1,0) [0|0] ""  NEO
  SG_ SteeringWheelChecksum : 47|16@0+ (1,0) [0|0] ""  NEO
- SG_ SteeringWheelCmd : 23|16@0+ (1,0) [0|0] ""  NEO
+ SG_ SteeringWheelCmd : 23|16@0- (0.0625,0) [0|0] "º"  NEO
 
 BO_ 560 EBCMRegen: 6 K17_EBCM
  SG_ Regen : 1|10@0+ (1,0) [0|0] ""  NEO
