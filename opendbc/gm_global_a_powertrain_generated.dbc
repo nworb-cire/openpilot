@@ -119,7 +119,7 @@ BO_ 309 ECMPRDNL: 8 K20_ECM
  SG_ PRNDL : 2|3@0+ (1,0) [0|0] ""  NEO
  SG_ ESPButton : 4|1@0+ (1,0) [0|1] "" XXX
 
-BO_ 313 STEER_RELATED: 7 XXX
+BO_ 313 STEER_RELATED: 7 K9_BCM
  SG_ PACMParkAssistCmdAvail : 8|1@0+ (1,0) [0|1] "" NEO
 
 BO_ 320 BCMTurnSignals: 3 K9_BCM
