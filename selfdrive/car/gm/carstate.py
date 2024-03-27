@@ -134,15 +134,17 @@ class CarState(CarStateBase):
 
   @staticmethod
   def get_cam_can_parser(CP):
-    messages = []
-    if CP.networkLocation == NetworkLocation.fwdCamera:
-      messages += [
-        ("AEBCmd", 10),
-        ("ASCMLKASteeringCmd", 10),
-        ("ASCMActiveCruiseControlStatus", 25),
-      ]
+    messages = [
+      ("APASteerStatus", 50),
+    ]
+    # if CP.networkLocation == NetworkLocation.fwdCamera:
+    #   messages += [
+    #     ("AEBCmd", 10),
+    #     ("ASCMLKASteeringCmd", 10),
+    #     ("ASCMActiveCruiseControlStatus", 25),
+    #   ]
 
-    return CANParser(DBC[CP.carFingerprint]["pt"], messages, CanBus.CAMERA)
+    return CANParser(DBC[CP.carFingerprint]["chassis"], messages, CanBus.CHASSIS)
 
   @staticmethod
   def get_can_parser(CP):
@@ -161,7 +163,6 @@ class CarState(CarStateBase):
       ("ECMEngineStatus", 100),
       ("PSCMSteeringAngle", 100),
       ("ECMAcceleratorPos", 80),
-      ("APASteerStatus", 50),
       ("STEER_RELATED", 10),
     ]
 
