@@ -29,8 +29,14 @@ class CarState(CarStateBase):
     self.prev_distance_button = 0
     self.distance_button = 0
 
+    self.pa_req_valid = False
+    self.pa_avail = False
+
   def update(self, pt_cp, cam_cp, loopback_cp):
     ret = car.CarState.new_message()
+
+    self.pa_req_valid = pt_cp.vl["APASteerStatus"]["RequestValid"]
+    self.pa_avail = pt_cp.vl["STEER_RELATED"]["PACMParkAssistCmdAvail"]
 
     self.prev_cruise_buttons = self.cruise_buttons
     self.prev_distance_button = self.distance_button
@@ -155,6 +161,8 @@ class CarState(CarStateBase):
       ("ECMEngineStatus", 100),
       ("PSCMSteeringAngle", 100),
       ("ECMAcceleratorPos", 80),
+      ("APASteerStatus", 50),
+      ("STEER_RELATED", 10),
     ]
 
     if CP.enableBsm:
