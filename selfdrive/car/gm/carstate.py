@@ -35,7 +35,7 @@ class CarState(CarStateBase):
   def update(self, pt_cp, cam_cp, loopback_cp):
     ret = car.CarState.new_message()
 
-    self.pa_req_valid = pt_cp.vl["APASteerStatus"]["RequestValid"]
+    self.pa_req_valid = cam_cp.vl["APASteerStatus"]["RequestValid"]
     self.pa_avail = pt_cp.vl["STEER_RELATED"]["PACMParkAssistCmdAvail"]
 
     self.prev_cruise_buttons = self.cruise_buttons
