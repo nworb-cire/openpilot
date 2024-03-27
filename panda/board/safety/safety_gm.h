@@ -165,6 +165,11 @@ static bool gm_tx_hook(const CANPacket_t *to_send) {
 
   // TODO: PACM STEER: safety check
   if (addr == 0x337) {
+//    int desired_angle = (GET_BYTE(to_send, 2) << 8) | GET_BYTE(to_send, 3);
+//    bool steer_req = GET_BIT(to_send, 9U);
+//    if (steer_angle_cmd_checks(desired_angle, GM_STEERING_LIMITS)) {
+//      tx = false;
+//    }
     (void) 0;
   }
 
