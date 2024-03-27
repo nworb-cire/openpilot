@@ -956,6 +956,14 @@ EVENTS: dict[int, dict[str, Alert | AlertCallbackType]] = {
     ET.NO_ENTRY: NoEntryAlert("Vehicle Sensors Calibrating"),
   },
 
+  EventName.parkAssistRequestValid: {
+    ET.PERMANENT: NormalPermanentAlert("Park Assist Request Valid", priority=Priority.HIGH),
+  },
+
+  EventName.parkAssistAvailable: {
+    ET.PERMANENT: NormalPermanentAlert("Park Assist Available", priority=Priority.HIGH),
+  },
+
 }
 
 

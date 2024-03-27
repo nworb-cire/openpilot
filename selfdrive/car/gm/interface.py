@@ -234,6 +234,11 @@ class CarInterface(CarInterfaceBase):
     if ret.vEgo < self.CP.minSteerSpeed:
       events.add(EventName.belowSteerSpeed)
 
+    if self.CS.pa_req_valid:
+      events.add(EventName.parkAssistRequestValid)
+    if self.CS.pa_avail:
+      events.add(EventName.parkAssistAvailable)
+
     ret.events = events.to_msg()
 
     return ret
