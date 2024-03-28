@@ -31,12 +31,14 @@ class CarState(CarStateBase):
 
     self.pa_req_valid = False
     self.pa_avail = False
+    self.pa_angle = 0
 
   def update(self, pt_cp, cam_cp, loopback_cp):
     ret = car.CarState.new_message()
 
     self.pa_req_valid = cam_cp.vl["APASteerStatus"]["RequestValid"]
     self.pa_avail = pt_cp.vl["STEER_RELATED"]["PACMParkAssistCmdAvail"]
+    self.pa_angle = cam_cp.vl["PSCMSteeringAngle"]["Angle"]
 
     self.prev_cruise_buttons = self.cruise_buttons
     self.prev_distance_button = self.distance_button

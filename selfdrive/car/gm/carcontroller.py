@@ -95,7 +95,7 @@ class CarController(CarControllerBase):
         new_steer = actuators.steeringAngleDeg
         apply_steer = apply_std_steer_angle_limits(new_steer, self.angle_steer_last, CS.out.vEgo, self.params)
       else:
-        apply_steer = 0
+        apply_steer = CS.pa_angle
 
       self.angle_steer_last = apply_steer
       idx = (self.frame // 2) % 4
