@@ -138,6 +138,7 @@ class CarState(CarStateBase):
   def get_cam_can_parser(CP):
     messages = [
       ("APASteerStatus", 50),
+      ("PSCMSteeringAngle", 100),
     ]
     # if CP.networkLocation == NetworkLocation.fwdCamera:
     #   messages += [
