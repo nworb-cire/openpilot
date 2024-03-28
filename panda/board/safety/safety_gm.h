@@ -171,7 +171,7 @@ static bool gm_tx_hook(const CANPacket_t *to_send) {
 //      tx = false;
 //    }
     (void) 0;
-    tx = false;  // block temporarily to compare checksums and other message values
+//    tx = false;  // block temporarily to compare checksums and other message values
   }
 
   // GAS/REGEN: safety check
