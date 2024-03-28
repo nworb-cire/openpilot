@@ -75,7 +75,7 @@ class CarController(CarControllerBase):
       if CS.loopback_lka_steering_cmd_ts_nanos == 0:
         self.lka_steering_cmd_counter = CS.pt_lka_steering_cmd_counter + 1
 
-      send_lka = CC.latActive and not self.pa_active
+      send_lka = CC.latActive and not self.pa_active and CS.out.vEgo >= 12 * CV.MPH_TO_MS
       if send_lka:
         new_steer = int(round(actuators.steer * self.params.STEER_MAX))
         apply_steer = apply_driver_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.params)
