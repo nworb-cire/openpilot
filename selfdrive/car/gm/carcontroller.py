@@ -3,7 +3,7 @@ from openpilot.common.conversions import Conversions as CV
 from openpilot.common.numpy_fast import interp
 from openpilot.common.realtime import DT_CTRL
 from opendbc.can.packer import CANPacker
-from openpilot.selfdrive.car import apply_driver_steer_torque_limits
+from openpilot.selfdrive.car import apply_driver_steer_torque_limits, apply_std_steer_angle_limits
 from openpilot.selfdrive.car.gm import gmcan
 from openpilot.selfdrive.car.gm.values import DBC, CanBus, CarControllerParams, CruiseButtons
 from openpilot.selfdrive.car.interfaces import CarControllerBase
@@ -39,6 +39,9 @@ class CarController(CarControllerBase):
     self.packer_obj = CANPacker(DBC[self.CP.carFingerprint]['radar'])
     self.packer_ch = CANPacker(DBC[self.CP.carFingerprint]['chassis'])
 
+    self.angle_steer_last = 0
+    self.pa_active = False
+
   def update(self, CC, CS, now_nanos):
     actuators = CC.actuators
     hud_control = CC.hudControl
@@ -72,7 +75,8 @@ class CarController(CarControllerBase):
       if CS.loopback_lka_steering_cmd_ts_nanos == 0:
         self.lka_steering_cmd_counter = CS.pt_lka_steering_cmd_counter + 1
 
-      if CC.latActive:
+      send_lka = CC.latActive and not self.pa_active
+      if send_lka:
         new_steer = int(round(actuators.steer * self.params.STEER_MAX))
         apply_steer = apply_driver_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.params)
       else:
@@ -81,7 +85,24 @@ class CarController(CarControllerBase):
       self.last_steer_frame = self.frame
       self.apply_steer_last = apply_steer
       idx = self.lka_steering_cmd_counter % 4
-      can_sends.append(gmcan.create_steering_control(self.packer_pt, CanBus.POWERTRAIN, apply_steer, idx, CC.latActive))
+      can_sends.append(gmcan.create_steering_control(self.packer_pt, CanBus.POWERTRAIN, apply_steer, idx, send_lka))
+
+    # PACM: 50Hz
+    if self.frame % 2 == 0:
+      send_pa = (self.pa_active or CS.pa_avail) and CS.out.vEgo < 15 * CV.MPH_TO_MS
+
+      if send_pa:
+        new_steer = actuators.steeringAngleDeg
+        apply_steer = apply_std_steer_angle_limits(new_steer, self.angle_steer_last, CS.out.vEgo, self.params)
+      else:
+        apply_steer = 0
+
+      self.angle_steer_last = apply_steer
+      idx = (self.frame // 2) % 4
+      rising_edge = send_pa and not self.pa_active
+      self.pa_active = send_pa
+      can_sends.append(gmcan.create_parking_steering_control(self.packer_ch, CanBus.CHASSIS, apply_steer, send_pa, rising_edge, idx))
+
 
     if self.CP.openpilotLongitudinalControl:
       # Gas/regen, brakes, and UI commands - all at 25Hz
