@@ -185,8 +185,8 @@ def create_parking_steering_control(packer, bus, apply_steer, active, rising_edg
     "RollingCounter2": idx,
     "InvRollingCounter": (-rising_edge -idx) % 4,
     "RequestActive": int(active),
-    "Zero_If_Centered_1": idx2,
-    "Zero_If_Centered_2": (1-idx2) if active else idx2,
+    "ZeroIfCentered_1": idx2,
+    "ZeroIfCentered_2": (1-idx2) if active else idx2,
     "RequestActiveRisingEdge": rising_edge
   }
   return packer.make_can_msg("PACMParkAssitCmd", bus, values)
