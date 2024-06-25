@@ -102,7 +102,6 @@ class CarInterface(CarInterfaceBase):
       ret.radarUnavailable = True  # no radar
       ret.pcmCruise = True
       ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM
-      ret.minEnableSpeed = 5 * CV.KPH_TO_MS
       ret.minSteerSpeed = 10 * CV.KPH_TO_MS
 
       # Tuning for experimental long
@@ -121,8 +120,6 @@ class CarInterface(CarInterfaceBase):
       ret.networkLocation = NetworkLocation.gateway
       ret.radarUnavailable = RADAR_HEADER_MSG not in fingerprint[CanBus.OBSTACLE] and not docs
       ret.pcmCruise = False  # stock non-adaptive cruise control is kept off
-      # supports stop and go, but initial engage must (conservatively) be above 18mph
-      ret.minEnableSpeed = 18 * CV.MPH_TO_MS
       ret.minSteerSpeed = 7 * CV.MPH_TO_MS
 
       # Tuning
@@ -153,7 +150,6 @@ class CarInterface(CarInterfaceBase):
       ret.steerActuatorDelay = 0.2
 
     elif candidate == CAR.GMC_ACADIA:
-      ret.minEnableSpeed = -1.  # engage speed is decided by pcm
       ret.steerActuatorDelay = 0.2
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
 
@@ -161,11 +157,9 @@ class CarInterface(CarInterfaceBase):
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
 
     elif candidate == CAR.CADILLAC_ESCALADE:
-      ret.minEnableSpeed = -1.  # engage speed is decided by pcm
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
 
     elif candidate in (CAR.CADILLAC_ESCALADE_ESV, CAR.CADILLAC_ESCALADE_ESV_2019):
-      ret.minEnableSpeed = -1.  # engage speed is decided by pcm
 
       if candidate == CAR.CADILLAC_ESCALADE_ESV:
         ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[10., 41.0], [10., 41.0]]
