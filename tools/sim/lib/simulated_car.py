@@ -2,6 +2,7 @@ import cereal.messaging as messaging
 
 from opendbc.can.packer import CANPacker
 from opendbc.can.parser import CANParser
+from opendbc.car.honda.values import HondaPandaFlags
 from openpilot.common.params import Params
 from openpilot.selfdrive.pandad.pandad_api_impl import can_list_to_can_capnp
 from openpilot.tools.sim.lib.common import SimulatorState
@@ -94,7 +95,7 @@ class SimulatedCar:
       'controlsAllowed': True,
       'safetyModel': 'hondaBosch',
       'alternativeExperience': self.sm["carParams"].alternativeExperience,
-      'safetyParam': Panda.FLAG_HONDA_RADARLESS | Panda.FLAG_HONDA_BOSCH_LONG,
+      'safetyParam': HondaPandaFlags.FLAG_HONDA_RADARLESS | HondaPandaFlags.FLAG_HONDA_BOSCH_LONG,
     }
     self.pm.send('pandaStates', dat)
 
