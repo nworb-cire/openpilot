@@ -3,8 +3,8 @@ import sys
 import argparse
 from subprocess import check_output, CalledProcessError
 from panda import Panda
-from panda.python.uds import UdsClient, SESSION_TYPE, DTC_REPORT_TYPE, DTC_STATUS_MASK_TYPE
-from panda.python.uds import get_dtc_num_as_str, get_dtc_status_names
+from opendbc.can.uds import UdsClient, SESSION_TYPE, DTC_REPORT_TYPE, DTC_STATUS_MASK_TYPE
+from opendbc.can.uds import get_dtc_num_as_str, get_dtc_status_names
 
 parser = argparse.ArgumentParser(description="read DTC status")
 parser.add_argument("addr", type=lambda x: int(x,0))

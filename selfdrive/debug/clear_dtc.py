@@ -3,7 +3,7 @@ import sys
 import argparse
 from subprocess import check_output, CalledProcessError
 from panda import Panda
-from panda.python.uds import UdsClient, MessageTimeoutError, SESSION_TYPE, DTC_GROUP_TYPE
+from opendbc.can.uds import UdsClient, MessageTimeoutError, SESSION_TYPE, DTC_GROUP_TYPE
 
 parser = argparse.ArgumentParser(description="clear DTC status")
 parser.add_argument("addr", type=lambda x: int(x,0), nargs="?", default=0x7DF) # default is functional (broadcast) address

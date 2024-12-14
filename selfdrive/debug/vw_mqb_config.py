@@ -4,7 +4,7 @@ import argparse
 import struct
 from enum import IntEnum
 from panda import Panda
-from panda.python.uds import UdsClient, MessageTimeoutError, NegativeResponseError, SESSION_TYPE,\
+from opendbc.can.uds import UdsClient, MessageTimeoutError, NegativeResponseError, SESSION_TYPE,\
   DATA_IDENTIFIER_TYPE, ACCESS_TYPE
 from datetime import date
 
